@@ -1,4 +1,6 @@
-# Seu código aqui
+from os import name
+from flask import Flask, jsonify, request
+
 produtos = [
     {"id": 1, "name": "sabonete", "price": 5.99},
     {"id": 2, "name": "perfume", "price": 39.90},
@@ -31,3 +33,46 @@ produtos = [
     {"id": 29, "name": "coberta", "price": 55.99},
     {"id": 30, "name": "sofa", "price": 600.15}
 ]
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return {}
+
+@app.get('/products')
+def list_products():
+    return jsonify(produtos), 200
+
+@app.get('/products/<int:product_id>')
+def get(product_id: int):
+    for product in produtos:
+        if product.get('id') == product_id:
+            return jsonify(product),200
+
+@app.post('/products')
+def create():
+    data = request.get_json()
+    data = {'id': len(produtos)+1, **data}
+    produtos.append(data)
+    return jsonify(data), 201
+
+@app.route('/products/<int:product_id>', methods=['PUT', 'PATCH'])
+def update(product_id: int):
+    data = request.get_json()
+    product_position = product_id - 1
+    if data.get('name') and data.get('price'):
+        produtos[product_position]['name'] = data.get('name')
+        produtos[product_position]['price'] = data.get('price')
+    elif data.get('name'):
+        produtos[product_position]['name'] = data.get('name')
+    elif data.get('price'):
+        produtos[product_position]['price'] = data.get('price')
+    
+    return '', 204
+
+@app.delete('/products/<int:product_id>')
+def delete(product_id: int):
+    del produtos[product_id-1]
+
+    return '', 204
